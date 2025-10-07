@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Power BI Dashboards - Otimizado</title>
+    <title>Power BI Dashboards - TV</title>
     <style>
+        /* Reset simplificado para compatibilidade */
         * {
             margin: 0;
             padding: 0;
@@ -12,11 +13,13 @@
         }
         
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: Arial, sans-serif;
             background: #000;
             overflow: hidden;
             height: 100vh;
             width: 100vw;
+            -webkit-text-size-adjust: none;
+            text-size-adjust: none;
         }
         
         .dashboard-container {
@@ -34,11 +37,11 @@
             height: 100%;
             border: none;
             display: none;
+            background: #000;
         }
         
         .dashboard.active {
             display: block;
-            z-index: 2;
         }
         
         .loader {
@@ -49,39 +52,22 @@
             text-align: center;
             color: #fff;
             z-index: 100;
-            background: rgba(0, 0, 0, 0.7);
+            background: #000;
             padding: 20px;
-            border-radius: 10px;
-            display: none;
+            border-radius: 5px;
+            border: 1px solid #333;
         }
         
         .dashboard-info {
             position: absolute;
             bottom: 10px;
             left: 10px;
-            background: rgba(0, 0, 0, 0.7);
+            background: rgba(0, 0, 0, 0.8);
             padding: 5px 10px;
-            border-radius: 4px;
-            font-size: 0.8rem;
+            border-radius: 3px;
+            font-size: 14px;
             color: #fff;
             z-index: 100;
-            transition: opacity 0.3s;
-        }
-        
-        .progress-container {
-            width: 200px;
-            height: 4px;
-            background: #333;
-            border-radius: 2px;
-            margin: 10px auto;
-            overflow: hidden;
-        }
-        
-        .progress-bar {
-            height: 100%;
-            width: 0%;
-            background: #00bcf2;
-            transition: width 0.3s ease;
         }
         
         .error-message {
@@ -91,25 +77,27 @@
             transform: translate(-50%, -50%);
             text-align: center;
             color: #ff6b6b;
-            background: rgba(0, 0, 0, 0.8);
+            background: #000;
             padding: 20px;
-            border-radius: 10px;
+            border-radius: 5px;
+            border: 1px solid #333;
             display: none;
             max-width: 80%;
+        }
+        
+        .tv-optimization {
+            display: none;
         }
     </style>
 </head>
 <body>
     <div class="dashboard-container">
         <div class="loader" id="loader">
-            <p>Carregando dashboard...</p>
-            <div class="progress-container">
-                <div class="progress-bar" id="progress-bar"></div>
-            </div>
+            <p>Carregando...</p>
         </div>
         
         <div class="error-message" id="error-message">
-            Erro ao carregar dashboard. Verifique o console para detalhes.
+            Erro ao carregar. Tentando novamente...
         </div>
         
         <div id="dashboards">
@@ -119,96 +107,86 @@
         <div class="dashboard-info" id="dashboard-info"></div>
     </div>
 
+    <!-- Elementos ocultos para otimização de TV -->
+    <div class="tv-optimization">
+        <!-- Pré-carregar recursos comuns -->
+        <link rel="preconnect" href="https://app.powerbi.com">
+        <link rel="dns-prefetch" href="https://app.powerbi.com">
+    </div>
+
     <script>
-        // Configuração - Edite estas variáveis conforme necessário
+        // Configuração otimizada para TV antiga
         const config = {
             dashboardUrls: [
                 "https://app.powerbi.com/view?r=eyJrIjoiNjIyZjNiM2EtY2EwNi00YjY1LWI4Y2YtMTRkZDUwNmU4MTJmIiwidCI6ImE2NjFhZDU2LTQ4YzctNGFmNC04MGY2LTE0YzViMGNmOTk0ZCJ9&pageName=ReportSectionf046defa3f50ba229893",
                 "https://app.powerbi.com/view?r=eyJrIjoiOTA1M2ZiYzItNWQ0NS00OTgxLWJmZTMtMWFhNDQ3MWZlNjg2IiwidCI6ImE2NjFhZDU2LTQ4YzctNGFmNC04MGY2LTE0YzViMGNmOTk0ZCJ9&pageName=ReportSection4a34beef4580782bdc68",
                 "https://app.powerbi.com/view?r=eyJrIjoiODYyNTZmMWMtMzM4OC00NmQ4LWFhYTItYjNmOTZhNzdlNmMwIiwidCI6ImE2NjFhZDU2LTQ4YzctNGFmNC04MGY2LTE0YzViMGNmOTk0ZCJ9&pageName=ReportSection1a9e3c76c5d71bfd6425",
                 "https://app.powerbi.com/view?r=eyJrIjoiODYyNTZmMWMtMzM4OC00NmQ4LWFhYTItYjNmOTZhNzdlNmMwIiwidCI6ImE2NjFhZDU2LTQ4YzctNGFmNC04MGY2LTE0YzViMGNmOTk0ZCJ9&pageName=ReportSection3c30acace2c6c0801cc0",
-                "https://app.powerbi.com/view?r=eyJrIjoiODYyNTZmMWMtMzM4OC00NmQ4LWFhYTItYjNmOTZhNzdlNmMwIiwidCI6ImE2NjFhZDU2LTQ4YzctNGFmNC04MGY2LTE0YzViMGNmOTk0ZCJ9&pageName=ReportSection3238d0337d0447d9ed33",
-                "https://app.powerbi.com/view?r=eyJrIjoiM2Y5ODM1MmQtYTI5YS00ZmFhLWJkMzQtMzEzMThlOTE3OTYwIiwidCI6ImE2NjFhZDU2LTQ4YzctNGFmNC04MGY2LTE0YzViMGNmOTk0ZCJ9&pageName=ReportSectiona09243dd5375f87dcfc6",
-                "https://app.powerbi.com/view?r=eyJrIjoiM2Y5ODM1MmQtYTI5YS00ZmFhLWJkMzQtMzEzMThlOTE3OTYwIiwidCI6ImE2NjFhZDU2LTQ4YzctNGFmNC04MGY2LTE0YzViMGNmOTk0ZCJ9&pageName=9d0e59e193c7637cb996",
-                "https://app.powerbi.com/view?r=eyJrIjoiM2Y5ODM1MmQtYTI5YS00ZmFhLWJkMzQtMzEzMThlOTE3OTYwIiwidCI6ImE2NjFhZDU2LTQ4YzctNGFmNC04MGY2LTE0YzViMGNmOTk0ZCJ9&pageName=02c99ef1e2433b87d134",
-                "https://app.powerbi.com/view?r=eyJrIjoiM2Y5ODM1MmQtYTI5YS00ZmFhLWJkMzQtMzEzMThlOTE3OTYwIiwidCI6ImE2NjFhZDU2LTQ4YzctNGFmNC04MGY2LTE0YzViMGNmOTk0ZCJ9",
-                "https://app.powerbi.com/view?r=eyJrIjoiODliYTkwYzEtMDM3MS00ZGI5LThjZDctNjE5ODE2OGE1NmU0IiwidCI6ImE2NjFhZDU2LTQ4YzctNGFmNC04MGY2LTE0YzViMGNmOTk0ZCJ9&pageName=d8c45c1a5880ac84cb15",
-                "https://app.powerbi.com/view?r=eyJrIjoiOTZiZTc3MjEtN2MxZC00Yjg1LWI1YWUtNDMxY2MxNTc0YTM1IiwidCI6ImE2NjFhZDU2LTQ4YzctNGFmNC04MGY2LTE0YzViMGNmOTk0ZCJ9&pageName=ReportSectionb0b741816a19f1ff5339",
-                "https://app.powerbi.com/view?r=eyJrIjoiOThhNmFhZDQtZTkzMC00YmViLWI2NjUtODU0MDg5NTU4ODUxIiwidCI6ImE2NjFhZDU2LTQ4YzctNGFmNC04MGY2LTE0YzViMGNmOTk0ZCJ9&pageName=ReportSection1a9e3c76c5d71bfd6425",
-                "https://app.powerbi.com/view?r=eyJrIjoiZjZmZjY3NDMtYjhjZS00NDJmLTlmYjAtMDdkMmIxNWQ0ZmEzIiwidCI6ImE2NjFhZDU2LTQ4YzctNGFmNC04MGY2LTE0YzViMGNmOTk0ZCJ9&pageName=ReportSection",
-                "https://app.powerbi.com/view?r=eyJrIjoiNWUyOWZiMDctZGNjNy00NDFiLWE2NmMtN2RhMTdiNDBjZjk2IiwidCI6ImE2NjFhZDU2LTQ4YzctNGFmNC04MGY2LTE0YzViMGNmOTk0ZCJ9&pageName=ReportSection9a8fd3eb03928760d986",
-                "https://app.powerbi.com/view?r=eyJrIjoiNTFjNWFmZjUtNTYwYi00ODIxLWIxYjEtNDkzZDM4NjI4OTQ3IiwidCI6ImE2NjFhZDU2LTQ4YzctNGFmNC04MGY2LTE0YzViMGNmOTk0ZCJ9&pageName=ReportSection"
+                "https://app.powerbi.com/view?r=eyJrIjoiODYyNTZmMWMtMzM4OC00NmQ4LWFhYTItYjNmOTZhNzdlNmMwIiwidCI6ImE2NjFhZDU2LTQ4YzctNGFmNC04MGY2LTE0YzViMGNmOTk0ZCJ9&pageName=ReportSection3238d0337d0447d9ed33"
             ],
             dashboardNames: [
                 "Indicadores Engenharia",
                 "Acompanhamento 2025",
                 "Acomp. Inspeções",
                 "Controle de Rec's",
-                "Priorização de Rec's",
-                "Acomp. Inspeções",
-                "Controle de Recs civil - IFS",
-                "Priorização de Rec's",
-                "Andarilhos 2025",
-                "Ordens Andarilhos",
-                "PL. TRAB. CONSOLIDADO",
-                "Acomp. Inspeções",
-                "AÇÕES DE SEGURANÇA E AUDITORIA",
-                "Análise de Falhas",
-                "Análise de Óleo"
+                "Priorização de Rec's"
             ],
-            rotationInterval: 65000,
-            initialLoadTimeout: 120000, // 2 minutos para o primeiro dashboard
-            secondLoadTimeout: 90000,   // 1.5 minutos para o segundo dashboard
-            loadingTimeout: 55000,      // Timeout padrão para os demais
-            retryAttempts: 3,           // Mais tentativas para os primeiros dashboards
-            preloadNext: true
+            rotationInterval: 60000,    // 60 segundos
+            loadingTimeout: 45000,      // 45 segundos
+            retryAttempts: 3,
+            preloadNext: false,         // Desativado para TV antiga
+            tvMode: true                // Modo TV ativado
         };
         
-        // Variáveis de estado
+        // Variáveis de estado simplificadas
         let currentIndex = 0;
         let rotationInterval;
         let retryCount = 0;
-        let timeoutIds = {};
         let isSwitching = false;
         let dashboardLoadedState = {};
-        let dashboardLoadTimes = {};
-        let isFirstDashboard = true;
-        let isSecondDashboard = false;
+        
+        // Detectar capacidades da TV
+        function detectTVCapabilities() {
+            const capabilities = {
+                hasWebGL: !!window.WebGLRenderingContext,
+                hasCanvas: !!window.HTMLCanvasElement,
+                hasFlexbox: 'flex' in document.documentElement.style,
+                hasTransform: 'transform' in document.documentElement.style,
+                userAgent: navigator.userAgent
+            };
+            
+            console.log('Capacidades da TV:', capabilities);
+            return capabilities;
+        }
         
         // Inicializar a rotação
         function initRotation() {
-            console.log("Iniciando rotação de dashboards");
+            console.log("Iniciando rotação para TV");
+            
+            const tvCapabilities = detectTVCapabilities();
             
             if (!config.dashboardUrls || config.dashboardUrls.length === 0) {
-                showError("Nenhum dashboard configurado. Por favor, adicione URLs válidas.");
+                showError("Nenhum dashboard configurado.");
                 return;
             }
             
             // Inicializar estado de carregamento
             config.dashboardUrls.forEach((_, index) => {
                 dashboardLoadedState[index] = false;
-                dashboardLoadTimes[index] = 0;
             });
             
-            // Pré-carregar os dois primeiros dashboards simultaneamente
+            // Mostrar loader
             document.getElementById('loader').style.display = 'block';
-            updateProgressBar(5);
             
             // Carregar primeiro dashboard
-            loadDashboard(0, true);
+            loadDashboard(currentIndex);
             
-            // Iniciar a rotação após um delay
-            setTimeout(startRotation, 3000);
-        }
-        
-        // Atualizar barra de progresso
-        function updateProgressBar(percent) {
-            const progressBar = document.getElementById('progress-bar');
-            progressBar.style.width = percent + '%';
+            // Iniciar rotação mais tarde
+            setTimeout(startRotation, 5000);
         }
         
         // Carregar um dashboard específico
-        function loadDashboard(index, isInitialLoad = false) {
+        function loadDashboard(index) {
             if (isSwitching) return;
             isSwitching = true;
             
@@ -216,164 +194,97 @@
             
             const dashboardsContainer = document.getElementById('dashboards');
             
-            // Verificar se já existe e está carregado
+            // Verificar se já existe
             const existingIframe = document.getElementById(`dashboard-${index}`);
             if (existingIframe && dashboardLoadedState[index]) {
-                console.log(`Dashboard ${index} já existe e está carregado, ativando...`);
+                console.log(`Dashboard ${index} já carregado`);
                 switchToDashboard(index);
                 isSwitching = false;
                 return;
             }
             
-            // Mostrar loader apenas se não for o carregamento inicial
-            if (!isInitialLoad) {
-                document.getElementById('loader').style.display = 'block';
-                updateProgressBar(10);
-            }
+            // Mostrar loader
+            document.getElementById('loader').style.display = 'block';
             document.getElementById('error-message').style.display = 'none';
             
-            // Remover iframe existente se houver
+            // Remover iframe existente
             if (existingIframe) {
                 existingIframe.remove();
             }
             
-            // Determinar timeout com base no dashboard
-            let timeoutDuration;
-            if (index === 0) {
-                timeoutDuration = config.initialLoadTimeout;
-                isFirstDashboard = true;
-                isSecondDashboard = false;
-            } else if (index === 1) {
-                timeoutDuration = config.secondLoadTimeout;
-                isFirstDashboard = false;
-                isSecondDashboard = true;
-            } else {
-                timeoutDuration = config.loadingTimeout;
-                isFirstDashboard = false;
-                isSecondDashboard = false;
-            }
-            
-            // Criar novo iframe com atributos para performance
+            // Criar iframe otimizado para TV
             const iframe = document.createElement('iframe');
             iframe.id = `dashboard-${index}`;
             iframe.className = 'dashboard';
             iframe.src = config.dashboardUrls[index];
             iframe.setAttribute('allowfullscreen', 'true');
-            iframe.setAttribute('loading', 'eager');
             
-            // Simular progresso de carregamento
-            const progressInterval = setInterval(() => {
-                const currentProgress = parseInt(document.getElementById('progress-bar').style.width) || 10;
-                if (currentProgress < (index === 0 ? 70 : 90)) {
-                    updateProgressBar(currentProgress + 2);
-                }
-            }, 1000);
+            // Otimizações específicas para TV
+            iframe.setAttribute('scrolling', 'no');
+            iframe.style.visibility = 'hidden';
             
-            // Adicionar evento de load
-            iframe.addEventListener('load', () => {
-                console.log(`Dashboard ${index} carregado com sucesso`);
-                clearInterval(progressInterval);
-                updateProgressBar(100);
-                
-                if (timeoutIds[index]) {
-                    clearTimeout(timeoutIds[index]);
-                    delete timeoutIds[index];
-                }
-                
-                retryCount = 0;
+            // Evento de load otimizado
+            const loadHandler = function() {
+                console.log(`Dashboard ${index} carregado`);
+                iframe.style.visibility = 'visible';
                 dashboardLoadedState[index] = true;
-                dashboardLoadTimes[index] = Date.now();
                 
-                // Pequeno delay para garantir que tudo esteja renderizado
+                // Delay para garantir renderização
                 setTimeout(() => {
                     switchToDashboard(index);
-                    
-                    // Se for o primeiro dashboard, ajustar o timer para dar mais tempo
-                    if (index === 0) {
-                        console.log("Primeiro dashboard carregado, ajustando timer...");
-                        resetRotationTimer(90000); // 90 segundos adicionais para o primeiro
-                    }
-                    // Se for o segundo dashboard, também ajustar o timer
-                    else if (index === 1) {
-                        console.log("Segundo dashboard carregado, ajustando timer...");
-                        resetRotationTimer(60000); // 60 segundos adicionais para o segundo
-                    }
-                    
-                    // Pré-carregar próximo dashboard se configurado
-                    if (config.preloadNext) {
-                        setTimeout(() => preloadNextDashboard(), 2000);
-                    }
-                    
                     isSwitching = false;
-                }, 1500);
-            });
+                    
+                    // Forçar redesenho para TV
+                    forceRepaint();
+                }, 2000);
+            };
             
-            // Adicionar evento de error
+            iframe.addEventListener('load', loadHandler);
+            
+            // Evento de error
             iframe.addEventListener('error', () => {
-                console.error(`Erro ao carregar dashboard ${index}`);
-                clearInterval(progressInterval);
-                
-                if (timeoutIds[index]) {
-                    clearTimeout(timeoutIds[index]);
-                    delete timeoutIds[index];
-                }
+                console.error(`Erro no dashboard ${index}`);
                 
                 if (retryCount < config.retryAttempts) {
                     retryCount++;
-                    console.log(`Tentativa ${retryCount} de ${config.retryAttempts}`);
-                    
-                    setTimeout(() => {
-                        loadDashboard(index);
-                    }, 5000);
+                    console.log(`Tentativa ${retryCount}`);
+                    setTimeout(() => loadDashboard(index), 3000);
                 } else {
-                    console.log("Pulando para o próximo dashboard");
                     retryCount = 0;
-                    showError(`Falha ao carregar dashboard ${index+1}. Pulando para o próximo...`);
+                    showError(`Erro no dashboard ${index+1}. Pulando...`);
                     setTimeout(() => {
                         document.getElementById('error-message').style.display = 'none';
                         nextDashboard();
-                    }, 5000);
+                    }, 3000);
                 }
             });
             
-            // Adicionar timeout para carregamento
-            timeoutIds[index] = setTimeout(() => {
-                console.log(`Timeout ao carregar dashboard ${index}`);
-                clearInterval(progressInterval);
-                
-                if (document.getElementById(`dashboard-${index}`)) {
-                    document.getElementById(`dashboard-${index}`).remove();
-                }
-                
-                if (retryCount < config.retryAttempts) {
-                    retryCount++;
-                    console.log(`Tentativa ${retryCount} de ${config.retryAttempts} após timeout`);
+            // Timeout simplificado
+            setTimeout(() => {
+                if (!dashboardLoadedState[index] && document.getElementById(`dashboard-${index}`)) {
+                    console.log(`Timeout dashboard ${index}`);
+                    iframe.remove();
                     
-                    loadDashboard(index);
-                } else {
-                    retryCount = 0;
-                    showError(`Timeout ao carregar dashboard ${index+1}. Pulando para o próximo...`);
-                    setTimeout(() => {
-                        document.getElementById('error-message').style.display = 'none';
+                    if (retryCount < config.retryAttempts) {
+                        retryCount++;
+                        loadDashboard(index);
+                    } else {
+                        retryCount = 0;
                         nextDashboard();
-                    }, 5000);
+                    }
                 }
-            }, timeoutDuration);
+            }, config.loadingTimeout);
             
-            // Adicionar iframe ao container
+            // Adicionar iframe
             dashboardsContainer.appendChild(iframe);
         }
         
-        // Reiniciar o timer de rotação
-        function resetRotationTimer(additionalTime = 0) {
-            console.log("Reiniciando timer de rotação");
-            clearInterval(rotationInterval);
-            
-            rotationInterval = setInterval(() => {
-                if (!isSwitching) {
-                    nextDashboard();
-                }
-            }, config.rotationInterval + additionalTime);
+        // Forçar repaint para TV (solução para problemas de renderização)
+        function forceRepaint() {
+            const body = document.body;
+            body.style.display = 'none';
+            body.offsetHeight; // Trigger reflow
+            body.style.display = 'block';
         }
         
         // Mostrar mensagem de erro
@@ -384,43 +295,16 @@
             document.getElementById('loader').style.display = 'none';
         }
         
-        // Pré-carregar próximo dashboard
-        function preloadNextDashboard() {
-            const nextIndex = (currentIndex + 1) % config.dashboardUrls.length;
-            const nextIframe = document.getElementById(`dashboard-${nextIndex}`);
-            
-            if (!nextIframe && !dashboardLoadedState[nextIndex]) {
-                console.log(`Pré-carregando dashboard ${nextIndex}`);
-                
-                const iframe = document.createElement('iframe');
-                iframe.id = `dashboard-${nextIndex}`;
-                iframe.className = 'dashboard';
-                iframe.style.display = 'none';
-                iframe.src = config.dashboardUrls[nextIndex];
-                iframe.setAttribute('allowfullscreen', 'true');
-                iframe.setAttribute('loading', 'lazy');
-                
-                iframe.addEventListener('load', () => {
-                    console.log(`Dashboard ${nextIndex} pré-carregado com sucesso`);
-                    dashboardLoadedState[nextIndex] = true;
-                    dashboardLoadTimes[nextIndex] = Date.now();
-                });
-                
-                document.getElementById('dashboards').appendChild(iframe);
-            }
-        }
-        
         // Alternar para um dashboard específico
         function switchToDashboard(index) {
             console.log(`Alternando para dashboard ${index}`);
             
             // Esconder todos os dashboards
-            document.querySelectorAll('.dashboard').forEach(dashboard => {
-                dashboard.classList.remove('active');
-                if (!dashboard.id.includes(`dashboard-${index}`)) {
-                    dashboard.style.display = 'none';
-                }
-            });
+            const dashboards = document.querySelectorAll('.dashboard');
+            for (let i = 0; i < dashboards.length; i++) {
+                dashboards[i].classList.remove('active');
+                dashboards[i].style.display = 'none';
+            }
             
             // Mostrar o dashboard atual
             const currentDashboard = document.getElementById(`dashboard-${index}`);
@@ -429,7 +313,7 @@
                 currentDashboard.style.display = 'block';
             }
             
-            // Esconder loader e mensagens de erro
+            // Esconder loader
             document.getElementById('loader').style.display = 'none';
             document.getElementById('error-message').style.display = 'none';
             
@@ -444,15 +328,14 @@
         function updateDashboardInfo(index) {
             const infoElement = document.getElementById('dashboard-info');
             if (config.dashboardNames && config.dashboardNames[index]) {
-                infoElement.textContent = `${config.dashboardNames[index]} | ${index + 1} de ${config.dashboardUrls.length}`;
+                infoElement.textContent = `${config.dashboardNames[index]} | ${index + 1}/${config.dashboardUrls.length}`;
             } else {
-                infoElement.textContent = `Dashboard ${index + 1} de ${config.dashboardUrls.length}`;
+                infoElement.textContent = `Dashboard ${index + 1}/${config.dashboardUrls.length}`;
             }
-            infoElement.style.opacity = '1';
             
             // Esconder info após alguns segundos
             setTimeout(() => {
-                infoElement.style.opacity = '0.3';
+                infoElement.style.opacity = '0.5';
             }, 5000);
         }
         
@@ -470,7 +353,7 @@
         // Avançar para o próximo dashboard
         function nextDashboard() {
             const nextIndex = (currentIndex + 1) % config.dashboardUrls.length;
-            console.log(`Próximo dashboard: ${nextIndex}`);
+            console.log(`Próximo: ${nextIndex}`);
             
             if (dashboardLoadedState[nextIndex]) {
                 switchToDashboard(nextIndex);
@@ -479,17 +362,17 @@
             }
         }
         
-        // Limpar recursos para evitar vazamento de memória
+        // Limpar recursos periodicamente
         function cleanupMemory() {
+            const currentTime = Date.now();
             const nextIndex = (currentIndex + 1) % config.dashboardUrls.length;
-            const prevIndex = (currentIndex - 1 + config.dashboardUrls.length) % config.dashboardUrls.length;
             
             document.querySelectorAll('.dashboard').forEach((dashboard) => {
                 const id = dashboard.id;
                 const dashboardIndex = parseInt(id.split('-')[1]);
                 
-                if (dashboardIndex !== currentIndex && dashboardIndex !== nextIndex && dashboardIndex !== prevIndex) {
-                    console.log(`Removendo dashboard ${dashboardIndex} para liberar memória`);
+                if (dashboardIndex !== currentIndex && dashboardIndex !== nextIndex) {
+                    console.log(`Limpando dashboard ${dashboardIndex}`);
                     dashboard.remove();
                     dashboardLoadedState[dashboardIndex] = false;
                 }
@@ -503,45 +386,54 @@
             if (!document.fullscreenElement) {
                 if (elem.requestFullscreen) {
                     elem.requestFullscreen().catch(err => {
-                        console.log('Erro ao tentar modo tela cheia: ', err);
+                        console.log('Erro modo tela cheia: ', err);
                     });
                 }
             }
         }
         
-        // Iniciar quando o documento estiver carregado
-        document.addEventListener('DOMContentLoaded', () => {
-            console.log("DOM carregado, iniciando aplicação...");
-            
-            // Limpar memória periodicamente (a cada 3 minutos)
-            setInterval(cleanupMemory, 180000);
-            
-            // Iniciar após um breve delay para garantir que tudo esteja pronto
-            setTimeout(initRotation, 1000);
-            
-            // Tentar entrar em modo tela cheia após um breve delay
-            setTimeout(tryFullscreen, 2000);
-        });
-        
-        // Recarregar a página se ficar inativa por muito tempo
-        let inactivityTimer;
-        function resetInactivityTimer() {
-            clearTimeout(inactivityTimer);
-            inactivityTimer = setTimeout(() => {
-                console.log("Recarregando devido à inatividade...");
-                window.location.reload();
-            }, 3600000); // 1 hora
+        // Inicialização segura para TV
+        function safeInit() {
+            try {
+                console.log("Iniciando aplicação TV...");
+                initRotation();
+                
+                // Limpar memória a cada 2 minutos
+                setInterval(cleanupMemory, 120000);
+                
+                // Tentar tela cheia
+                setTimeout(tryFullscreen, 1000);
+                
+            } catch (error) {
+                console.error("Erro na inicialização:", error);
+                showError("Erro na inicialização. Recarregando...");
+                setTimeout(() => window.location.reload(), 5000);
+            }
         }
         
-        // Reiniciar timer em eventos de interação
-        document.addEventListener('mousemove', resetInactivityTimer);
-        document.addEventListener('keypress', resetInactivityTimer);
+        // Iniciar quando o documento estiver pronto
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', safeInit);
+        } else {
+            safeInit();
+        }
         
-        // Iniciar timer
-        resetInactivityTimer();
+        // Prevenir que a TV entre em modo de suspensão
+        let activityTimer;
+        function resetActivity() {
+            clearTimeout(activityTimer);
+            // Simular atividade a cada 30 segundos
+            activityTimer = setTimeout(() => {
+                const event = new Event('mousemove');
+                document.dispatchEvent(event);
+            }, 30000);
+        }
         
-        console.log("Script carregado com sucesso");
-        console.log(`Configuração: ${config.dashboardUrls.length} dashboards encontrados`);
+        document.addEventListener('mousemove', resetActivity);
+        document.addEventListener('keypress', resetActivity);
+        resetActivity();
+        
+        console.log("Sistema TV carregado");
     </script>
 </body>
 </html>
