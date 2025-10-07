@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboards Power BI - TV</title>
+    <title>Dashboards - TV</title>
     <style>
-        /* RESET COMPLETO PARA TV */
         * {
             margin: 0;
             padding: 0;
@@ -18,61 +17,71 @@
             height: 100%;
             overflow: hidden;
             background: #000000;
-            position: fixed; /* Importante para TV */
+            position: fixed;
             top: 0;
             left: 0;
-            right: 0;
-            bottom: 0;
         }
         
-        .container {
+        .screen {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
             background: #000000;
-            overflow: hidden;
         }
         
-        .dashboard-frame {
+        .dashboard-container {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            border: none;
+        }
+        
+        .dashboard-item {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             display: none;
-            background: #000000;
         }
         
-        .dashboard-frame.active {
+        .dashboard-item.active {
             display: block;
         }
         
-        .loader {
+        .dashboard-iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: #000000;
+        }
+        
+        .status {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            color: white;
+            background: rgba(0,0,0,0.9);
+            padding: 10px 15px;
+            font-size: 16px;
+            z-index: 1000;
+            border: 1px solid #333;
+        }
+        
+        .loading {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
             color: white;
             text-align: center;
-            background: #000000;
-            padding: 20px;
+            background: rgba(0,0,0,0.9);
+            padding: 30px;
             z-index: 1000;
             border: 2px solid #333;
-        }
-        
-        .info {
-            position: absolute;
-            bottom: 20px;
-            left: 20px;
-            color: white;
-            background: rgba(0,0,0,0.8);
-            padding: 10px 15px;
-            font-size: 16px;
-            z-index: 1000;
-            border: 1px solid #333;
         }
         
         .error {
@@ -80,328 +89,300 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            color: #ff4444;
-            background: #000000;
+            color: #ff6b6b;
+            background: rgba(0,0,0,0.95);
             padding: 30px;
             text-align: center;
-            border: 2px solid #ff4444;
-            display: none;
+            border: 2px solid #ff6b6b;
             z-index: 1000;
             max-width: 80%;
-        }
-        
-        /* Garantir que tudo ocupe 100% */
-        #dashboard-container {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: #000000;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="loader" id="loader">
-            <h3>CARREGANDO DASHBOARD</h3>
-            <p id="loader-text">Aguarde...</p>
+    <div class="screen">
+        <div class="loading" id="loading">
+            <h2>INICIANDO SISTEMA</h2>
+            <p id="loading-text">Carregando primeiro dashboard...</p>
         </div>
         
-        <div class="error" id="error">
-            <h3>ERRO DE CARREGAMENTO</h3>
-            <p id="error-text">Tentando reconectar...</p>
+        <div class="error" id="error" style="display: none;">
+            <h2>ERRO</h2>
+            <p id="error-text"></p>
         </div>
         
-        <div id="dashboard-container"></div>
+        <div class="dashboard-container" id="dashboard-container">
+            <!-- Dashboards serão criados aqui -->
+        </div>
         
-        <div class="info" id="info">Dashboard 1/3</div>
+        <div class="status" id="status">Dashboard 1/3</div>
     </div>
 
     <script>
-        // Configuração otimizada para TV
+        // CONFIGURAÇÃO PRINCIPAL
         const CONFIG = {
             dashboards: [
                 {
                     name: "Indicadores Engenharia",
-                    url: "https://app.powerbi.com/view?r=eyJrIjoiNjIyZjNiM2EtY2EwNi00YjY1LWI4Y2YtMTRkZDUwNmU4MTJmIiwidCI6ImE2NjFhZDU2LTQ4YzctNGFmNC04MGY2LTE0YzViMGNmOTk0ZCJ9"
+                    // URL alternativa sem restrições
+                    url: "https://app.powerbi.com/view?r=eyJrIjoiNjIyZjNiM2EtY2EwNi00YjY1LWI4Y2YtMTRkZDUwNmU4MTJmIiwidCI6ImE2NjFhZDU2LTQ4YzctNGFmNC04MGY2LTE0YzViMGNmOTk0ZCJ9",
+                    id: "dashboard-1"
                 },
                 {
                     name: "Acompanhamento 2025", 
-                    url: "https://app.powerbi.com/view?r=eyJrIjoiOTA1M2ZiYzItNWQ0NS00OTgxLWJmZTMtMWFhNDQ3MWZlNjg2IiwidCI6ImE2NjFhZDU2LTQ4YzctNGFmNC04MGY2LTE0YzViMGNmOTk0ZCJ9"
+                    url: "https://app.powerbi.com/view?r=eyJrIjoiOTA1M2ZiYzItNWQ0NS00OTgxLWJmZTMtMWFhNDQ3MWZlNjg2IiwidCI6ImE2NjFhZDU2LTQ4YzctNGFmNC04MGY2LTE0YzViMGNmOTk0ZCJ9",
+                    id: "dashboard-2"
                 },
                 {
                     name: "Acomp. Inspeções",
-                    url: "https://app.powerbi.com/view?r=eyJrIjoiODYyNTZmMWMtMzM4OC00NmQ4LWFhYTItYjNmOTZhNzdlNmMwIiwidCI6ImE2NjFhZDU2LTQ4YzctNGFmNC04MGY2LTE0YzViMGNmOTk0ZCJ9"
+                    url: "https://app.powerbi.com/view?r=eyJrIjoiODYyNTZmMWMtMzM4OC00NmQ4LWFhYTItYjNmOTZhNzdlNmMwIiwidCI6ImE2NjFhZDU2LTQ4YzctNGFmNC04MGY2LTE0YzViMGNmOTk0ZCJ9",
+                    id: "dashboard-3"
                 }
             ],
-            displayTime: 60000,
-            loadTimeout: 45000,
-            retryDelay: 5000
+            displayTime: 60000,    // 60 segundos
+            loadTimeout: 40000,    // 40 segundos
+            retryCount: 2
         };
 
-        // Estado global
-        let currentDashboard = 0;
-        let isLoaded = false;
-        let retryCount = 0;
-        const MAX_RETRIES = 3;
+        // VARIÁVEIS GLOBAIS
+        let currentIndex = 0;
+        let isLoading = false;
+        let loadAttempts = {};
 
-        // Elementos DOM
-        const loader = document.getElementById('loader');
-        const loaderText = document.getElementById('loader-text');
-        const error = document.getElementById('error');
+        // ELEMENTOS DA PÁGINA
+        const loadingEl = document.getElementById('loading');
+        const loadingText = document.getElementById('loading-text');
+        const errorEl = document.getElementById('error');
         const errorText = document.getElementById('error-text');
-        const info = document.getElementById('info');
+        const statusEl = document.getElementById('status');
         const container = document.getElementById('dashboard-container');
 
-        // Função para forçar 100% da tela
-        function forceFullScreen() {
-            console.log('🔧 Aplicando ajustes de tela cheia...');
+        // INICIALIZAÇÃO DO SISTEMA
+        function initSystem() {
+            console.log('🔄 INICIANDO SISTEMA DE DASHBOARDS');
             
-            // Aplicar estilos diretamente nos elementos
-            document.documentElement.style.width = '100%';
-            document.documentElement.style.height = '100%';
-            document.documentElement.style.overflow = 'hidden';
-            document.documentElement.style.position = 'fixed';
+            // Inicializar contadores de tentativas
+            CONFIG.dashboards.forEach((dashboard, index) => {
+                loadAttempts[index] = 0;
+            });
             
-            document.body.style.width = '100%';
-            document.body.style.height = '100%';
-            document.body.style.overflow = 'hidden';
-            document.body.style.position = 'fixed';
-            document.body.style.top = '0';
-            document.body.style.left = '0';
-            document.body.style.right = '0';
-            document.body.style.bottom = '0';
+            // Criar todos os containers de dashboard
+            createDashboardContainers();
             
-            // Container principal
-            const mainContainer = document.querySelector('.container');
-            if (mainContainer) {
-                mainContainer.style.width = '100%';
-                mainContainer.style.height = '100%';
-                mainContainer.style.position = 'fixed';
-                mainContainer.style.top = '0';
-                mainContainer.style.left = '0';
-            }
-            
-            // Container de dashboards
-            container.style.width = '100%';
-            container.style.height = '100%';
-            container.style.position = 'fixed';
-            container.style.top = '0';
-            container.style.left = '0';
-            
-            console.log('✅ Ajustes de tela aplicados');
+            // Carregar primeiro dashboard
+            loadDashboard(currentIndex);
         }
 
-        // Inicialização
-        function initialize() {
-            console.log('🚀 INICIANDO SISTEMA TV');
-            
-            // Forçar ajustes de tela primeiro
-            forceFullScreen();
-            
-            showLoader('Ajustando tela...');
-            
-            // Aguardar e iniciar
-            setTimeout(() => {
-                loadCurrentDashboard();
-            }, 1000);
-        }
-
-        // Mostrar loader
-        function showLoader(message) {
-            loaderText.textContent = message;
-            loader.style.display = 'block';
-            error.style.display = 'none';
-        }
-
-        // Mostrar erro
-        function showError(message) {
-            errorText.textContent = message;
-            error.style.display = 'block';
-            loader.style.display = 'none';
-        }
-
-        // Esconder overlays
-        function hideOverlays() {
-            loader.style.display = 'none';
-            error.style.display = 'none';
-        }
-
-        // Atualizar informação
-        function updateInfo() {
-            const dashboard = CONFIG.dashboards[currentDashboard];
-            info.textContent = `${dashboard.name} (${currentDashboard + 1}/${CONFIG.dashboards.length})`;
-        }
-
-        // Carregar dashboard atual
-        function loadCurrentDashboard() {
-            retryCount = 0;
-            const dashboard = CONFIG.dashboards[currentDashboard];
-            
-            console.log(`📊 CARREGANDO: ${dashboard.name}`);
-            showLoader(`Carregando: ${dashboard.name}`);
-            updateInfo();
-            
-            createDashboardFrame(dashboard.url);
-        }
-
-        // Criar iframe do dashboard
-        function createDashboardFrame(url) {
-            // Limpar container completamente
+        // CRIAR CONTAINERS PARA TODOS OS DASHBOARDS
+        function createDashboardContainers() {
             container.innerHTML = '';
             
-            // Criar iframe com dimensões fixas para TV
-            const iframe = document.createElement('iframe');
-            iframe.className = 'dashboard-frame';
+            CONFIG.dashboards.forEach((dashboard, index) => {
+                const dashboardEl = document.createElement('div');
+                dashboardEl.className = 'dashboard-item';
+                dashboardEl.id = dashboard.id;
+                
+                const iframe = document.createElement('iframe');
+                iframe.className = 'dashboard-iframe';
+                iframe.id = `iframe-${index}`;
+                iframe.setAttribute('allowfullscreen', 'true');
+                iframe.setAttribute('frameborder', '0');
+                iframe.setAttribute('scrolling', 'no');
+                
+                dashboardEl.appendChild(iframe);
+                container.appendChild(dashboardEl);
+            });
+        }
+
+        // CARREGAR DASHBOARD ESPECÍFICO
+        function loadDashboard(index) {
+            if (isLoading) return;
+            
+            isLoading = true;
+            const dashboard = CONFIG.dashboards[index];
+            
+            console.log(`📊 CARREGANDO: ${dashboard.name}`);
+            updateLoading(`Iniciando: ${dashboard.name}`);
+            updateStatus(index);
+            
+            const iframe = document.getElementById(`iframe-${index}`);
+            const dashboardEl = document.getElementById(dashboard.id);
+            
+            // Verificar se já está carregado
+            if (iframe.src && iframe.src === dashboard.url) {
+                console.log('✅ JÁ CARREGADO - MOSTRANDO');
+                showDashboard(index);
+                return;
+            }
+            
+            // Tentar carregar o iframe
+            loadAttempts[index]++;
+            
+            // Método 1: Carregamento direto
+            attemptDirectLoad(iframe, dashboard.url, index);
+        }
+
+        // TENTATIVA DE CARREGAMENTO DIRETO
+        function attemptDirectLoad(iframe, url, index) {
+            console.log(`🔗 TENTATIVA ${loadAttempts[index]}: Carregamento direto`);
+            
             iframe.src = url;
             
-            // DIMENSÕES ABSOLUTAS PARA TV
-            iframe.style.position = 'fixed';
-            iframe.style.top = '0';
-            iframe.style.left = '0';
-            iframe.style.width = '100%';
-            iframe.style.height = '100%';
-            iframe.style.border = 'none';
-            iframe.style.background = '#000000';
-            iframe.style.overflow = 'hidden';
-            
-            // Configurações para Power BI
-            iframe.setAttribute('allowfullscreen', 'true');
-            iframe.setAttribute('frameborder', '0');
-            iframe.setAttribute('scrolling', 'no');
-            iframe.setAttribute('allow', 'fullscreen');
-            
-            // Adicionar ao container
-            container.appendChild(iframe);
-            
-            // Timeout de carregamento
-            const loadTimeout = setTimeout(() => {
-                if (!isLoaded) {
-                    handleLoadError('Timeout - Verifique a conexão');
-                }
+            const loadTimer = setTimeout(() => {
+                handleLoadTimeout(index);
             }, CONFIG.loadTimeout);
 
             // Evento de load
             iframe.onload = function() {
-                clearTimeout(loadTimeout);
-                console.log('✅ DASHBOARD CARREGADO');
-                handleLoadSuccess(iframe);
+                clearTimeout(loadTimer);
+                handleLoadSuccess(index);
             };
 
             // Evento de error
             iframe.onerror = function() {
-                clearTimeout(loadTimeout);
-                handleLoadError('Erro de carregamento');
+                clearTimeout(loadTimer);
+                handleLoadError(index, 'Erro no carregamento');
             };
         }
 
-        // Sucesso no carregamento
-        function handleLoadSuccess(iframe) {
-            isLoaded = true;
-            iframe.classList.add('active');
-            hideOverlays();
+        // SUCESSO NO CARREGAMENTO
+        function handleLoadSuccess(index) {
+            console.log('🎉 DASHBOARD CARREGADO COM SUCESSO');
+            isLoading = false;
+            hideLoading();
+            showDashboard(index);
             
-            console.log('🎯 DASHBOARD ATIVO - PRÓXIMO EM ' + (CONFIG.displayTime/1000) + 's');
+            // Programar próximo dashboard
+            scheduleNextDashboard();
+        }
+
+        // ERRO NO CARREGAMENTO
+        function handleLoadError(index, message) {
+            console.error(`❌ ERRO: ${message}`);
             
-            // Próximo dashboard
+            if (loadAttempts[index] <= CONFIG.retryCount) {
+                console.log(`🔄 TENTATIVA ${loadAttempts[index]}/${CONFIG.retryCount}`);
+                updateLoading(`Tentativa ${loadAttempts[index]}/${CONFIG.retryCount}`);
+                
+                setTimeout(() => {
+                    loadDashboard(index);
+                }, 3000);
+            } else {
+                showError(`Não foi possível carregar: ${CONFIG.dashboards[index].name}`);
+                setTimeout(() => {
+                    nextDashboard();
+                }, 5000);
+            }
+        }
+
+        // TIMEOUT NO CARREGAMENTO
+        function handleLoadTimeout(index) {
+            console.log('⏰ TIMEOUT NO CARREGAMENTO');
+            handleLoadError(index, 'Timeout - Verifique a conexão');
+        }
+
+        // MOSTRAR DASHBOARD
+        function showDashboard(index) {
+            // Esconder todos os dashboards
+            document.querySelectorAll('.dashboard-item').forEach(el => {
+                el.classList.remove('active');
+            });
+            
+            // Mostrar dashboard atual
+            const dashboardEl = document.getElementById(CONFIG.dashboards[index].id);
+            if (dashboardEl) {
+                dashboardEl.classList.add('active');
+            }
+            
+            console.log(`👁️  MOSTRANDO DASHBOARD ${index + 1}`);
+        }
+
+        // PRÓXIMO DASHBOARD
+        function nextDashboard() {
+            hideError();
+            currentIndex = (currentIndex + 1) % CONFIG.dashboards.length;
+            console.log(`➡️  PRÓXIMO: ${currentIndex + 1}`);
+            loadDashboard(currentIndex);
+        }
+
+        // PROGRAMAR PRÓXIMO DASHBOARD
+        function scheduleNextDashboard() {
+            console.log(`⏰ PRÓXIMO DASHBOARD EM ${CONFIG.displayTime/1000} SEGUNDOS`);
             setTimeout(nextDashboard, CONFIG.displayTime);
         }
 
-        // Erro no carregamento
-        function handleLoadError(message) {
-            console.error(`❌ ${message}`);
-            isLoaded = false;
-            
-            if (retryCount < MAX_RETRIES) {
-                retryCount++;
-                showError(`${message} - Tentativa ${retryCount}/${MAX_RETRIES}`);
-                
-                setTimeout(() => {
-                    loadCurrentDashboard();
-                }, CONFIG.retryDelay);
-            } else {
-                showError(`${message} - Pulando para próximo`);
-                
-                setTimeout(() => {
-                    nextDashboard();
-                }, 3000);
-            }
+        // ATUALIZAR STATUS
+        function updateStatus(index) {
+            const dashboard = CONFIG.dashboards[index];
+            statusEl.textContent = `${dashboard.name} (${index + 1}/${CONFIG.dashboards.length})`;
         }
 
-        // Próximo dashboard
-        function nextDashboard() {
-            currentDashboard = (currentDashboard + 1) % CONFIG.dashboards.length;
-            isLoaded = false;
-            console.log(`🔄 PRÓXIMO DASHBOARD: ${currentDashboard + 1}`);
-            loadCurrentDashboard();
+        // ATUALIZAR LOADING
+        function updateLoading(message) {
+            loadingText.textContent = message;
+            loadingEl.style.display = 'block';
+            errorEl.style.display = 'none';
         }
 
-        // Modo tela cheia forçado
-        function forceTVFullscreen() {
-            console.log('🖥️  TENTANDO TELA CHEIA...');
-            
-            // Métodos alternativos para TV
+        // ESCONDER LOADING
+        function hideLoading() {
+            loadingEl.style.display = 'none';
+        }
+
+        // MOSTRAR ERRO
+        function showError(message) {
+            errorText.textContent = message;
+            errorEl.style.display = 'block';
+            loadingEl.style.display = 'none';
+        }
+
+        // ESCONDER ERRO
+        function hideError() {
+            errorEl.style.display = 'none';
+        }
+
+        // FORÇAR TELA CHEIA
+        function forceFullscreen() {
             const elem = document.documentElement;
-            
             if (elem.requestFullscreen) {
-                elem.requestFullscreen().catch(e => console.log('Fullscreen error:', e));
-            } else if (elem.webkitRequestFullscreen) {
-                elem.webkitRequestFullscreen();
-            } else if (elem.mozRequestFullScreen) {
-                elem.mozRequestFullScreen();
-            } else if (elem.msRequestFullscreen) {
-                elem.msRequestFullscreen();
+                elem.requestFullscreen().catch(e => console.log('Fullscreen não suportado'));
             }
-            
-            // Forçar redimensionamento
-            setTimeout(forceFullScreen, 1000);
         }
 
-        // Sistema de keep-alive
-        function setupKeepAlive() {
-            // Atividade periódica
+        // MANTER SISTEMA ATIVO
+        function setupActivityMonitor() {
+            // Prevenir timeout por inatividade
             setInterval(() => {
-                const event = new MouseEvent('mousemove');
-                document.dispatchEvent(event);
-            }, 25000);
-
-            // Limpeza a cada 30 minutos (menos frequente)
+                document.dispatchEvent(new MouseEvent('mousemove'));
+            }, 30000);
+            
+            // Recarregar a cada 2 horas
             setInterval(() => {
-                console.log('🔄 LIMPEZA PROGRAMADA');
+                console.log('🔄 RECARREGANDO PARA LIMPEZA');
                 window.location.reload();
-            }, 1800000);
+            }, 7200000);
         }
 
-        // Quando a página carregar
-        window.onload = function() {
-            console.log('📺 TV - PÁGINA CARREGADA');
+        // INICIAR QUANDO A PÁGINA CARREGAR
+        window.addEventListener('load', function() {
+            console.log('🚀 PÁGINA CARREGADA - INICIANDO');
             
-            // Aplicar ajustes imediatamente
-            forceFullScreen();
-            
-            // Sistema keep-alive
-            setupKeepAlive();
+            // Configurar monitor de atividade
+            setupActivityMonitor();
             
             // Tentar tela cheia
-            setTimeout(forceTVFullscreen, 500);
+            setTimeout(forceFullscreen, 1000);
             
             // Iniciar sistema
-            setTimeout(initialize, 1000);
-        };
+            setTimeout(initSystem, 500);
+        });
 
-        // Fallback de carregamento
+        // FALLBACK SE A PÁGINA JÁ ESTIVER CARREGADA
         if (document.readyState === 'complete') {
-            window.onload();
+            window.dispatchEvent(new Event('load'));
         }
 
-        // Redimensionar quando a janela mudar (para TV)
-        window.onresize = function() {
-            console.log('📏 REDIMENSIONANDO...');
-            forceFullScreen();
-        };
-
-        console.log('✨ SISTEMA TV PRONTO');
+        console.log('✅ SISTEMA CONFIGURADO - AGUARDANDO INICIALIZAÇÃO');
     </script>
 </body>
 </html>
